@@ -1,0 +1,21 @@
+# ── Database ──────────────────────────────────────────────────────────────────
+psycopg2-binary>=2.9          # Postgres driver (binary = no libpq compile needed)
+requests==2.31.0             # For making HTTP requests to Supabase REST API (alternative to psycopg2)
+# ── Spotify API ───────────────────────────────────────────────────────────────
+spotipy>=2.24                 # Spotify Web API client (handles OAuth + retries)
+
+# ── Environment / config ──────────────────────────────────────────────────────
+python-dotenv>=1.0            # Loads .env into os.environ
+
+# ── Progress + logging ────────────────────────────────────────────────────────
+tqdm>=4.66                    # Progress bars in ingestion + enrichment stages
+
+# ── Data / ML (for feature store consumption + model training later) ──────────
+pandas>=2.2                   # DataFrame reads from feature_store view
+numpy>=1.26                   # Numerical ops on audio feature vectors
+scikit-learn>=1.4             # Model training (matrix factorisation, KNN baseline)
+scipy>=1.13                   # Sparse matrix support for collaborative filtering
+
+# ── Jupyter (optional but recommended for dev exploration) ────────────────────
+notebook>=7.0                 # jupyter notebook
+ipykernel>=6.29               # kernel for VS Code notebook support

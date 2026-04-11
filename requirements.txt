@@ -1,6 +1,6 @@
 # ── Database ──────────────────────────────────────────────────────────────────
 psycopg2-binary>=2.9          # Postgres driver (binary = no libpq compile needed)
-requests==2.31.0             # For making HTTP requests to Supabase REST API (alternative to psycopg2)
+requests==2.31.0              # For making HTTP requests to Supabase REST API (alternative to psycopg2)
 # ── Spotify API ───────────────────────────────────────────────────────────────
 spotipy>=2.24                 # Spotify Web API client (handles OAuth + retries)
 

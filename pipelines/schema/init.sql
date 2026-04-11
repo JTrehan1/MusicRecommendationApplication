@@ -3,6 +3,9 @@
 --  Run once against your Supabase project via psql or the SQL editor.
 --  Schema mirrors what production (local Postgres) will use; dev just has
 --  a smaller slice of MPD data loaded.
+-- To run this command, you can use the psql CLI or the SQL editor in the Supabase dashboard:
+-- psql "postgresql://postgres:<your-password>@db.<your-project-ref>.supabase.co:5432/postgres" \
+--  -f schema/init.sql
 -- =============================================================================
 
 -- =============================================================================
@@ -14,8 +17,8 @@ CREATE TABLE IF NOT EXISTS playlists (
     playlist_id         BIGINT          PRIMARY KEY,   -- MPD pid field
     playlist_name       TEXT            NOT NULL,
     collaborative       BOOLEAN         NOT NULL DEFAULT FALSE,
-    modified_at         TIMESTAMPTZ,                   -- epoch → timestamp
-    num_tracks          INT             NOT NULL,
+    modified_at         TIMESTAMPTZ,                   -- epoch timestamp
+    num_tracks          INT             NOT NULL,a
     num_albums          INT,
     num_followers       INT,
     num_edits           INT,
@@ -50,7 +53,7 @@ CREATE TABLE IF NOT EXISTS playlist_tracks (
     playlist_id         BIGINT          NOT NULL REFERENCES playlists(playlist_id) ON DELETE CASCADE,
     track_uri           TEXT            NOT NULL REFERENCES tracks(track_uri)      ON DELETE CASCADE,
     position            SMALLINT        NOT NULL,
-    PRIMARY KEY (playlist_id, track_uri)
+    PRIMARY KEY (playlist_id, track_uri, position)
 );
 
 CREATE INDEX IF NOT EXISTS idx_pt_track_uri ON playlist_tracks(track_uri);
@@ -117,7 +120,7 @@ CREATE INDEX IF NOT EXISTS idx_artist_genres ON artist_metadata USING GIN(genres
 
 -- =============================================================================
 --  FEATURE STORE VIEW  (joins CBF + CF into one flat row per track)
---  This is the "model-ready" layer your training code reads from.
+--  This is the "model-ready" layer training code reads from.
 -- =============================================================================
 
 CREATE OR REPLACE VIEW feature_store AS
@@ -193,3 +196,6 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
     started_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     finished_at         TIMESTAMPTZ
 );
+
+
+

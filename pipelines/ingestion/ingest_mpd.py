@@ -49,6 +49,8 @@ def _parse_slice(path: Path) -> tuple[list[dict], list[dict], list[dict]]:
     """
     Parse a single mpd.slice.*.json file.
 
+    :param path: Path to the slice file to parse.
+
     Returns:
         playlists      — list of dicts, one per playlist in this slice
         tracks         — list of dicts, one per UNIQUE track uri seen
@@ -137,6 +139,13 @@ def _flush(table: str, rows: list[dict], conflict_col: str, update_cols: list[st
     Write a batch of rows to a Postgres table using bulk_upsert.
     Returns the number of rows affected.
 
+    :param table: Name of the table to write to.
+    :param rows: List of dictionaries representing rows to write.
+    :param conflict_col: Column(s) to check for conflicts in the upsert.
+    :param update_cols: Columns to update if a conflict is found.
+
+    :return: Number of rows affected by the upsert
+
     DESIGN NOTES:
     ─────────────
     - This is just a thin wrapper around bulk_upsert that also logs the result.
@@ -199,19 +208,20 @@ def run():
                 failed += 1
                 continue
 
+            # Updating playlists table
             update_cols  = ["playlist_id", "playlist_name", "collaborative", "modified_at", "num_tracks", "num_albums"
             , "num_followers", "num_edits", "duration_ms"]
             for i in range(0, len(playlists), UPSERT_BATCH):
                 _flush("playlists", playlists[i:i+UPSERT_BATCH], "playlist_id", update_cols)
 
-
-            update_cols  = ["track_name","artist_uri","artist_name",
-                        "album_uri","album_name","duration_ms"]
-            #                (don't overwrite enrich_status if already done)
+            # Updating tracks table 
+            update_cols  = ["track_name","artist_uri","artist_name", "album_uri","album_name","duration_ms"]
             for i in range(0, len(tracks), UPSERT_BATCH):
                 _flush("tracks", tracks[i:i+UPSERT_BATCH], "track_uri", update_cols)
 
-
+            # Updating playlist_tracks table
+            # playlist_tracks is a pure insert table — all columns form the PK.
+            # DO NOTHING on conflict ensures idempotency across re-runs.
             for i in range(0, len(playlist_tracks), UPSERT_BATCH):
                 _flush("playlist_tracks", playlist_tracks[i:i+UPSERT_BATCH], "playlist_id, track_uri, position", [])
 

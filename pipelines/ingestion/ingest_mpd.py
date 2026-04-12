@@ -178,7 +178,6 @@ def run():
     - Call _finish_run with "done" or "failed" at the end.
     """
 
-    # TODO: find slice files and raise if none found
     slice_files = sorted(MPD_ROOT.glob("mpd.slice.*.json"))
     if not slice_files:
         raise FileNotFoundError(f"No slice files found in {MPD_ROOT} to upload to databse.")
@@ -192,7 +191,6 @@ def run():
     try:
         for path in tqdm(slice_files, desc="MPD slices", unit="file"):
 
-            # TODO: wrap _parse_slice in a try/except
             # On exception: log the error, increment failed, continue to next file
             try:
                 playlists, tracks, playlist_tracks = _parse_slice(path)
@@ -201,24 +199,22 @@ def run():
                 failed += 1
                 continue
 
-            # TODO: flush playlists in batches of UPSERT_BATCH
             update_cols  = ["playlist_id", "playlist_name", "collaborative", "modified_at", "num_tracks", "num_albums"
             , "num_followers", "num_edits", "duration_ms"]
             for i in range(0, len(playlists), UPSERT_BATCH):
                 _flush("playlists", playlists[i:i+UPSERT_BATCH], "playlist_id", update_cols)
 
-            # TODO: flush tracks in batches
+
             update_cols  = ["track_name","artist_uri","artist_name",
                         "album_uri","album_name","duration_ms"]
             #                (don't overwrite enrich_status if already done)
             for i in range(0, len(tracks), UPSERT_BATCH):
                 _flush("tracks", tracks[i:i+UPSERT_BATCH], "track_uri", update_cols)
 
-            # TODO: flush playlist_tracks in batches
+
             for i in range(0, len(playlist_tracks), UPSERT_BATCH):
                 _flush("playlist_tracks", playlist_tracks[i:i+UPSERT_BATCH], "playlist_id, track_uri, position", [])
 
-            # TODO: accumulate totals
             total_playlists += len(playlists)
             total_tracks    += len(tracks)
             total_pt        += len(playlist_tracks)
@@ -237,7 +233,6 @@ def run():
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  SECTION 4 — AUDIT HELPERS
-#  These are complete — no TODOs here. Read them to understand pipeline_runs.
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _start_run(stage: str) -> str:

@@ -1,4 +1,5 @@
 #!/Users/jai/Documents/GitHub/MusicRecommendationApplication/.venv/bin/python
+# -*- coding: utf-8 -*-
 
 
 import argparse

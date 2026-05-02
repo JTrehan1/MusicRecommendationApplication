@@ -1,7 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from pipelines.utils import bulk_upsert, get_cursor
+from pipelines.utils.db import bulk_upsert, get_cursor
 import spotipy 
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -42,7 +42,7 @@ def get_api_client():
     return client
 
 # Make the API call 
-def fetch_track_api_data(track_ids: list[str], client):
+def fetch_api_data(track_ids: list[str], client):
     """Make an API call for a batch of track IDs and return the enriched data.
     
     For track_metadata the API call is
@@ -53,6 +53,9 @@ def fetch_track_api_data(track_ids: list[str], client):
     curl --request GET \
     --url 'https://api.spotify.com/v1/tracks?ids=7ouMYWpwJ422jRcDASZB7P%2C4VqPOruhp5EdPBeR92t6lQ%2C2takcwOaAZWiXQijPHIx7B' \
     --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
+
+    :param track_ids: List of Spotify track IDs to fetch data for.
+    :param client: Authenticated Spotify API client.
     
     Returns a dictionary of {id: data} for each track
     """ 
@@ -80,6 +83,11 @@ def fetch_track_api_data(track_ids: list[str], client):
 
 def build_audio_features_table(track_id: str, api_data: dict) -> dict:
     """Transform the API response for a single track into the format required for database upsert.
+
+    Called in main loop to populate the audio_features table.
+
+    :param track_id: Spotify track ID.
+    :param api_data: API response data for the track.
     
     Returns a dictionary with keys matching the database columns.
     """
@@ -104,6 +112,15 @@ def build_audio_features_table(track_id: str, api_data: dict) -> dict:
     return audio_features_dict
 
 def build_track_metadata_table(track_id: str, api_data: dict) -> dict:
+    """
+    Transform the API response for a single track into the format required for database upsert.
+    
+    Called in main loop to populate the track_metadata table.
+
+    :param track_id: Spotify track ID.
+    :param api_data: API response data for the track.
+
+    Returns a dictionary with keys matching the database columns."""
     
     track_metadata_dict = {
         "track_uri":    f"spotify:track:{track_id}",
@@ -123,3 +140,121 @@ def build_track_metadata_table(track_id: str, api_data: dict) -> dict:
     }
     
     return track_metadata_dict
+
+def build_artist_metadata_table(artist_id: str, api_data: dict) -> dict:
+    """
+    Transform the API response for a single artist into the format required for database upsert.
+    
+    Called in main loop to populate the artist_metadata table.
+
+    :param artist_id: Spotify artist ID.
+    :param api_data: API response data for the artist.
+
+    Returns a dictionary with keys matching the database columns."""
+    
+    artist_metadata_dict = {
+        "artist_uri": f"spotify:artist:{artist_id}",
+        "artist_id": artist_id,
+        "artist_name": api_data.get("name"),
+        "genres": api_data.get("genres"),
+        "popularity": api_data.get("popularity"),
+        "followers": api_data.get("followers", {}).get("total"),
+    }
+    
+    return artist_metadata_dict
+
+def update_enrichment_status(track_ids: list, status: str) -> None:
+    """Update the enrichment status for a given track_id in the tracks table.
+    
+    Status options:
+    - 'pending': track is pending enrichment (default state)
+    - 'enriched': track has been successfully enriched and upserted into the database
+    - 'error': enrichment failed for this track 
+
+    :param track_ids: List of Spotify track IDs to update status for.
+    :param status: New enrichment status to set for the track IDs.
+    """
+
+    if not track_ids:
+        return
+    
+    with get_cursor() as cur:
+        cur.execute("""
+            UPDATE tracks
+            SET enrichment_status = %s
+            WHERE track_id = ANY(%s)
+  
+        """, 
+        (status, track_ids))
+
+
+def batch_maker(full_list: list, batch_size: int) -> list[list]:
+    """Utility function to split a full list into batches of a specified size.
+    
+    :param full_list: The complete list to be split into batches.
+    :param batch_size: The desired size of each batch.
+
+    Returns a list of batches, where each batch is a sublist of the original list.
+    """
+
+    batch_list = []
+    for i in range(0, len(full_list), batch_size):
+        batch_list.append(full_list[i : i + batch_size])
+    
+    return batch_list
+
+def run():
+    """ Orchestrate the enrichment process: fetch pending tracks, make API calls, transform data, and upsert into database. """
+
+    # STEP 1: Fetch pending tracks from database
+    pending_track_ids = get_pending_tracks()
+
+    # Guard against empty pending stracks 
+    if not pending_track_ids:
+        log.info("No pending tracks found for enrichment. Exiting.")
+        return
+
+    # Step 2: Set up the API client
+    api_client = get_api_client()
+
+    # Step 3 create the batches of track IDs to process
+    batches_of_tracks = batch_maker(pending_track_ids, BATCH_SIZE)
+
+    log.info("Processing %d batches of up to %d", len(batches_of_tracks), BATCH_SIZE)
+ 
+    total_done      = 0
+    total_unavail   = 0
+
+    # Step 4: Loop through each batch and make API calls
+    for batch in batches_of_tracks:
+        done_tracks = []
+        unavailable_tracks = []
+
+        # Make the API call for the batch of track IDs
+        audio_features, track_features, artist_features = fetch_api_data(batch, api_client)
+
+        # For each batch build the tables 
+        for track_id in batch:
+            
+
+            audio_metadata_dict = build_audio_features_table(track_id, audio_features.get(track_id, {}))
+            track_metadata_dict = build_track_metadata_table(track_id, track_features.get(track_id, {}))
+            artist_metadata_dict = build_artist_metadata_table(track_id, artist_features.get(track_id, {}))
+
+            # Upsert the data into the database 
+            bulk_upsert("audio_features", [audio_metadata_dict], conflict_col="track_uri", update_cols=list(audio_metadata_dict.keys()))
+            bulk_upsert("track_metadata", [track_metadata_dict], conflict_col="track_uri", update_cols=list(track_metadata_dict.keys()))
+            bulk_upsert("artist_metadata", [artist_metadata_dict], conflict_col="artist_uri", update_cols=list(artist_metadata_dict.keys()))
+
+            # Update the enrichment status for the track in the tracks table to 'enriched'
+            update_enrichment_status([track_id], status="enriched")
+
+        total_done += len(batch)
+
+if __name__ == "__main__":
+    run()
+
+
+
+
+

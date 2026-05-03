@@ -1,7 +1,7 @@
 # NOT USED IN PRODUCTION
 # Spotify's Developer Terms of Service (updated 2025) prohibit using
 # API data to train ML/AI models. This script is preserved for
-# architectural reference only and is never merged into main.
+# architectural reference only.
 # See: https://developer.spotify.com/terms
 
 import os

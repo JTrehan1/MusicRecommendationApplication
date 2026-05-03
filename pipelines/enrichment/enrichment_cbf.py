@@ -1,7 +1,13 @@
+# NOT USED IN PRODUCTION
+# Spotify's Developer Terms of Service (updated 2025) prohibit using
+# API data to train ML/AI models. This script is preserved for
+# architectural reference only and is never merged into main.
+# See: https://developer.spotify.com/terms
+
 import os
 import logging
 from dotenv import load_dotenv
-from pipelines.utils.db import bulk_upsert, get_cursor
+from utils.db import bulk_upsert, get_cursor
 import spotipy 
 from spotipy.oauth2 import SpotifyClientCredentials
 
@@ -20,18 +26,18 @@ def get_pending_tracks() -> list[str]:
 
     with get_cursor() as cur:
         cur.execute("""
-            SELECT track_id FROM tracks
-            WHERE enrichment_status = 'pending'
-            ORDER BY track_id
+            SELECT track_uri FROM tracks
+            WHERE enrich_status = 'pending'
+            ORDER BY track_uri
         """)
                     
         rows = cur.fetchall()
 
-        # Extract track IDs
-        track_ids = [row[0] for row in rows]
-        log.info("Fetched %d pending tracks for enrichment", len(track_ids))
+        # Extract track URIs and IDs
+        track_uris = [row[0] for row in rows]
+    log.info("Fetched %d pending tracks for enrichment", len(track_uris))
         
-    return track_ids
+    return track_uris
 
 # Setup the API client
 def get_api_client():
@@ -124,7 +130,7 @@ def build_track_metadata_table(track_id: str, api_data: dict) -> dict:
     
     track_metadata_dict = {
         "track_uri":    f"spotify:track:{track_id}",
-        "isrc": api_data.get("isrc"),
+        "isrc": api_data.get("external_ids", {}).get("isrc"),
         "explicit": api_data.get("explicit"),
         "popularity": api_data.get("popularity"),
         "preview_url": api_data.get("preview_url"),
@@ -154,7 +160,6 @@ def build_artist_metadata_table(artist_id: str, api_data: dict) -> dict:
     
     artist_metadata_dict = {
         "artist_uri": f"spotify:artist:{artist_id}",
-        "artist_id": artist_id,
         "artist_name": api_data.get("name"),
         "genres": api_data.get("genres"),
         "popularity": api_data.get("popularity"),
@@ -181,8 +186,8 @@ def update_enrichment_status(track_ids: list, status: str) -> None:
     with get_cursor() as cur:
         cur.execute("""
             UPDATE tracks
-            SET enrichment_status = %s
-            WHERE track_id = ANY(%s)
+            SET enrich_status = %s
+            WHERE track_uri = ANY(%s)
   
         """, 
         (status, track_ids))
@@ -206,50 +211,54 @@ def batch_maker(full_list: list, batch_size: int) -> list[list]:
 def run():
     """ Orchestrate the enrichment process: fetch pending tracks, make API calls, transform data, and upsert into database. """
 
-    # STEP 1: Fetch pending tracks from database
-    pending_track_ids = get_pending_tracks()
+    # STEP 1: Fetch pending tracks from database and strip the Spotify track ID from the track URI
+    pending_track_uris = get_pending_tracks()
 
     # Guard against empty pending stracks 
-    if not pending_track_ids:
+    if not pending_track_uris:
         log.info("No pending tracks found for enrichment. Exiting.")
         return
 
     # Step 2: Set up the API client
     api_client = get_api_client()
 
-    # Step 3 create the batches of track IDs to process
-    batches_of_tracks = batch_maker(pending_track_ids, BATCH_SIZE)
+    # Step 3 create the batches of track URIs to process
+    batches = batch_maker(pending_track_uris, BATCH_SIZE)
 
-    log.info("Processing %d batches of up to %d", len(batches_of_tracks), BATCH_SIZE)
+    log.info("Processing %d batches of up to %d", len(batches), BATCH_SIZE)
  
     total_done      = 0
     total_unavail   = 0
 
     # Step 4: Loop through each batch and make API calls
-    for batch in batches_of_tracks:
+    for batch_uris in batches:
         done_tracks = []
         unavailable_tracks = []
+        track_ids = [uri.split(":")[-1] for uri in batch_uris]
 
         # Make the API call for the batch of track IDs
-        audio_features, track_features, artist_features = fetch_api_data(batch, api_client)
+        audio_features, track_features, artist_features = fetch_api_data(track_ids, api_client)
 
         # For each batch build the tables 
-        for track_id in batch:
+        for track_id in track_ids:
             
-
+            
             audio_metadata_dict = build_audio_features_table(track_id, audio_features.get(track_id, {}))
             track_metadata_dict = build_track_metadata_table(track_id, track_features.get(track_id, {}))
-            artist_metadata_dict = build_artist_metadata_table(track_id, artist_features.get(track_id, {}))
+            
+            # Obtain the artist_id from the track metadata to use as the conflict column for the artist_metadata table upsert
+            artist_id = track_features.get(track_id, {}).get("artists", [{}])[0].get("id")
+            artist_metadata_dict = build_artist_metadata_table(artist_id, artist_features.get(artist_id, {}))
 
             # Upsert the data into the database 
-            bulk_upsert("audio_features", [audio_metadata_dict], conflict_col="track_uri", update_cols=list(audio_metadata_dict.keys()))
-            bulk_upsert("track_metadata", [track_metadata_dict], conflict_col="track_uri", update_cols=list(track_metadata_dict.keys()))
-            bulk_upsert("artist_metadata", [artist_metadata_dict], conflict_col="artist_uri", update_cols=list(artist_metadata_dict.keys()))
+            bulk_upsert("audio_features", [audio_metadata_dict], conflict_col="track_uri", update_cols=[c for c in audio_metadata_dict.keys() if c != "track_uri"])
+            bulk_upsert("track_metadata", [track_metadata_dict], conflict_col="track_uri", update_cols=[c for c in track_metadata_dict.keys() if c != "track_uri"])
+            bulk_upsert("artist_metadata", [artist_metadata_dict], conflict_col="artist_uri", update_cols=[c for c in artist_metadata_dict.keys() if c != "artist_uri"])
 
             # Update the enrichment status for the track in the tracks table to 'enriched'
-            update_enrichment_status([track_id], status="enriched")
+            update_enrichment_status(batch_uris, status="enriched")
 
-        total_done += len(batch)
+        total_done += len(track_ids)
 
 if __name__ == "__main__":
     run()

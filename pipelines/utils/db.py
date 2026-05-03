@@ -6,6 +6,7 @@ Uses psycopg2 with a simple connection-pool wrapper.
 import os
 import logging
 from contextlib import contextmanager
+from typing import Optional
 
 import psycopg2
 from psycopg2 import pool
@@ -28,7 +29,7 @@ def _build_dsn() -> str:
 
 
 # Module-level pool; initialised once on first import.
-_pool: pool.ThreadedConnectionPool | None = None
+_pool: Optional[pool.ThreadedConnectionPool] = None
 
 
 def get_pool(minconn: int = 1, maxconn: int = 10) -> pool.ThreadedConnectionPool:

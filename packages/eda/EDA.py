@@ -120,6 +120,9 @@ def plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df):
     plt.plot(track_frequency)
     plt.show()
     
+def percentage_of_tracks_in_playlists(playlist_tracks_df, threshold):
+    """Function to work out the number of """
+    
 def run_interaction_matrix_properties():
     print("\nInteraction Matrix Properties:")
     print(f"Total unique playlists: {count_total_unique_playlists()}")
@@ -127,3 +130,5 @@ def run_interaction_matrix_properties():
     print(f"Total playlist-track interactions: {total_playlist_interations()}")
     print(f"Sparsity of the interaction matrix: {sparsity_calculation(playlist_tracks_df, playlists_df, tracks_df)}")
     plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df)
+    
+run_interaction_matrix_properties()

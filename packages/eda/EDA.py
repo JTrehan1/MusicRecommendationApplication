@@ -2,6 +2,7 @@ import psycopg2
 import pandas as pd
 from dotenv import load_dotenv
 import os
+import matplotlib.pyplot as plt
 
 load_dotenv("credentials/.env")
 
@@ -81,3 +82,48 @@ def run_data_quality_checks():
     data_type_summary(playlist_tracks_df)
 
 run_data_quality_checks()
+
+# Interaction matrix properties 
+def count_total_unique_playlists(df = playlists_df):
+    
+    playlists_count = df['playlist_id'].nunique()
+    return playlists_count
+
+def count_total_unique_tracks(df = tracks_df):
+    tracks_count = df['track_uri'].nunique()
+    return tracks_count
+
+def total_playlist_interations (df = playlist_tracks_df):
+    interactions_count = len(df)
+    return interactions_count
+
+def sparsity_calculation(playlist_tracks_df, playlists_df, tracks_df):
+    """Calculates the sparsity of the interaction matrix.
+    Sparsity = 1 - (number of interactions / (number of unique playlists * number of unique tracks))
+    
+    :param playlist_tracks_df: DataFrame containing playlist-track interactions
+    :param playlists_df: DataFrame containing playlist information
+    :param tracks_df: DataFrame containing track information
+    """
+    number_of_interactions = total_playlist_interations(playlist_tracks_df)
+    number_of_unique_playlists = count_total_unique_playlists(playlists_df)
+    number_of_unique_tracks = count_total_unique_tracks(tracks_df)
+    
+    sparsity = 1 - (number_of_interactions / (number_of_unique_playlists * number_of_unique_tracks))
+    
+    return sparsity
+
+def plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df):
+    """Function to plot the distribution of track frequency across playlists"""
+    # Work out the number of times a track appears in playlists 
+    track_frequency = playlist_tracks_df['track_uri'].value_counts()
+    plt.plot(track_frequency)
+    plt.show()
+    
+def run_interaction_matrix_properties():
+    print("\nInteraction Matrix Properties:")
+    print(f"Total unique playlists: {count_total_unique_playlists()}")
+    print(f"Total unique tracks: {count_total_unique_tracks()}")
+    print(f"Total playlist-track interactions: {total_playlist_interations()}")
+    print(f"Sparsity of the interaction matrix: {sparsity_calculation(playlist_tracks_df, playlists_df, tracks_df)}")
+    plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df)

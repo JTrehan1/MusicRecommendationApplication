@@ -33,12 +33,31 @@ print(playlist_tracks_df.head())
 # Data Quality Checks
 print("\nData Quality Checks:")
 def check_null_counts_per_column(df):
+    """
+    Checks null columns for table
+
+    Args:
+        df (dataframe): dataframe corresponding to table checking for null values
+
+    Returns:
+        null_counts (int): count of null values in each column of the dataframe
+    """
     null_counts = df.isnull().sum()
     null_counts[null_counts > 0]
     print(null_counts)
     return null_counts
 
 def drop_null_rows(df, column_names: list[str]):
+    """
+    Drop null rows for specific columns in specific table
+
+    Args:
+        df (df): dataframe null values wil be dropped from 
+        column_names (list[str]): list of column names as string
+
+    Returns:
+        df: dataframe with dropped null values
+    """
     
     before_rows = df.shape[0]
     df.dropna(subset=column_names)
@@ -132,3 +151,42 @@ def run_interaction_matrix_properties():
     plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df)
     
 run_interaction_matrix_properties()
+
+# Playlist level analysis 
+
+def plot_distribution_number_of_tracks_per_playlist():
+    return None
+
+def count_playlist_with_minimum_tracks():
+    return None
+
+def plot_distribution_playlist_duration():
+    return None
+
+def plot_distribution_of_edits_per_playlist():
+    return None
+def plot_distribution_of_number_of_albums_per_playlist():
+    return None
+
+# Track level analysis
+
+def find_top_20_tracks_by_playlist_occurrence():
+    return None
+
+def distribution_of_track_occurrence():
+    return None
+
+def plot_distribution_of_track_duration():
+    return None
+
+# Artist and album analysis
+
+def find_top_artists():
+    return None
+
+def plot_artist_occurence_across_playlists()
+    return None
+
+def find_top_albums():
+    return None
+

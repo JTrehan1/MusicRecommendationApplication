@@ -1,8 +1,9 @@
 import psycopg2
 import pandas as pd
-from dotenv import load_dotenv
 import os
 import matplotlib.pyplot as plt
+
+from dotenv import load_dotenv
 
 load_dotenv("credentials/.env")
 
@@ -154,26 +155,43 @@ run_interaction_matrix_properties()
 
 # Playlist level analysis 
 
-def plot_distribution_number_of_tracks_per_playlist():
-    return None
+def plot_distribution_number_of_tracks_per_playlist(df=playlist_tracks_df):
+    
+    count_unique_tracks_per_playlist = df.groupby('playlist_id')['track_uri'].nunique()
+    # plot the distribution
+    plt.plot(count_unique_tracks_per_playlist)
+    plt.show()
 
-def count_playlist_with_minimum_tracks():
-    return None
+def count_playlist_with_max_tracks(df=playlists_df, min_tracks = 10):
+    
+    count_playlists_with_max_tracks = len(df[df['num_tracks'] < min_tracks])
+    return count_playlists_with_max_tracks
 
-def plot_distribution_playlist_duration():
-    return None
+def plot_distribution_playlist_duration(df=playlists_df):
+    
+    duration_of_each_playlist = df['duration_ms']
+    plt.plot(duration_of_each_playlist)
+    plt.show()
+    
+def plot_distribution_of_edits_per_playlist(df=playlists_df):
+    
+    edits_per_playlist = df['num_edits']
+    plt.plot(edits_per_playlist)
+    plt.show()
 
-def plot_distribution_of_edits_per_playlist():
-    return None
-def plot_distribution_of_number_of_albums_per_playlist():
-    return None
+def plot_distribution_of_number_of_albums_per_playlist(df=playlists_df):
+    
+    albums_per_playlist = df['num_albums']
+    plt.plot(albums_per_playlist)
+    plt.show()
 
 # Track level analysis
-
-def find_top_20_tracks_by_playlist_occurrence():
+def find_top_20_tracks_by_playlist_occurrence(df=playlist_tracks_df):
+    """Determine how many times each track appears in a playlist"""
+    df.groupby('track_uri')['track_uri'].count()
     return None
 
-def distribution_of_track_occurrence():
+def plot_distribution_of_track_occurrence():
     return None
 
 def plot_distribution_of_track_duration():
@@ -184,9 +202,12 @@ def plot_distribution_of_track_duration():
 def find_top_artists():
     return None
 
-def plot_artist_occurence_across_playlists()
+def plot_artist_occurence_across_playlists():
     return None
 
 def find_top_albums():
     return None
+
+def plot_album_occurence_across_playlists():
+    
 

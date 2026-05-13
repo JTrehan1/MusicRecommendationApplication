@@ -44,7 +44,6 @@ def check_null_counts_per_column(df):
         null_counts (int): count of null values in each column of the dataframe
     """
     null_counts = df.isnull().sum()
-    null_counts[null_counts > 0]
     print(null_counts)
     return null_counts
 
@@ -61,7 +60,7 @@ def drop_null_rows(df, column_names: list[str]):
     """
     
     before_rows = df.shape[0]
-    df.dropna(subset=column_names)
+    df = df.dropna(subset=column_names)
     after_rows = df.shape[0]
     print(f"Dropped {before_rows - after_rows} rows with null values in column '{column_names}'")
 
@@ -137,11 +136,11 @@ def plot_distribution_of_tracks_frequency_per_playlist(playlist_tracks_df):
     """Function to plot the distribution of track frequency across playlists"""
     # Work out the number of times a track appears in playlists 
     track_frequency = playlist_tracks_df['track_uri'].value_counts()
-    plt.plot(track_frequency)
+    plt.hist(track_frequency)
+    plt.xlabel('Frequency in Playlists')
+    plt.ylabel('Number of Tracks')
+    plt.title('Distribution of Track Frequency Across Playlists')
     plt.show()
-    
-def percentage_of_tracks_in_playlists(playlist_tracks_df, threshold):
-    """Function to work out the number of """
     
 def run_interaction_matrix_properties():
     print("\nInteraction Matrix Properties:")
@@ -159,7 +158,10 @@ def plot_distribution_number_of_tracks_per_playlist(df=playlist_tracks_df):
     
     count_unique_tracks_per_playlist = df.groupby('playlist_id')['track_uri'].nunique()
     # plot the distribution
-    plt.plot(count_unique_tracks_per_playlist)
+    plt.hist(count_unique_tracks_per_playlist)
+    plt.xlabel('Number of Unique Tracks')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Number of Unique Tracks per Playlist')
     plt.show()
 
 def count_playlist_with_max_tracks(df=playlists_df, min_tracks = 10):
@@ -169,45 +171,105 @@ def count_playlist_with_max_tracks(df=playlists_df, min_tracks = 10):
 
 def plot_distribution_playlist_duration(df=playlists_df):
     
-    duration_of_each_playlist = df['duration_ms']
-    plt.plot(duration_of_each_playlist)
+    duration_of_each_playlist = df['duration_ms'] / 60000  # Convert duration from milliseconds to minutes  
+    plt.hist(duration_of_each_playlist)
+    plt.xlabel('Duration (minutes)')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Playlist Duration')
     plt.show()
     
 def plot_distribution_of_edits_per_playlist(df=playlists_df):
     
     edits_per_playlist = df['num_edits']
-    plt.plot(edits_per_playlist)
+    plt.hist(edits_per_playlist)
+    plt.xlabel('Number of Edits')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Number of Edits per Playlist')
     plt.show()
 
 def plot_distribution_of_number_of_albums_per_playlist(df=playlists_df):
     
     albums_per_playlist = df['num_albums']
-    plt.plot(albums_per_playlist)
+    plt.hist(albums_per_playlist)
+    plt.xlabel('Number of Albums')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Number of Albums per Playlist')
     plt.show()
+
+def run_playlist_level_analysis():
+    print("\nPlaylist Level Analysis:")
+    plot_distribution_number_of_tracks_per_playlist()
+    print(f"Number of playlists with less than 10 tracks: {count_playlist_with_max_tracks()}")
+    plot_distribution_playlist_duration()
+    plot_distribution_of_edits_per_playlist()
+    plot_distribution_of_number_of_albums_per_playlist()
+
+run_playlist_level_analysis()
 
 # Track level analysis
 def find_top_20_tracks_by_playlist_occurrence(df=playlist_tracks_df):
     """Determine how many times each track appears in a playlist"""
-    df.groupby('track_uri')['track_uri'].count()
-    return None
+    return df['track_uri'].value_counts().head(20)
 
-def plot_distribution_of_track_occurrence():
-    return None
+def plot_distribution_of_track_duration(df = tracks_df):
+    """Plot the distribution of track duration"""
+    track_durations = df['duration_ms']
+    plt.hist(track_durations)
+    plt.xlabel('Duration (ms)')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Track Duration')
+    plt.show()
 
-def plot_distribution_of_track_duration():
-    return None
+def run_track_level_analysis():
+    print("\nTrack Level Analysis:")
+    print("Top 20 tracks by playlist occurrence:")
+    print(find_top_20_tracks_by_playlist_occurrence())
+    plot_distribution_of_track_duration()   
+
+run_track_level_analysis()
 
 # Artist and album analysis
 
-def find_top_artists():
-    return None
+def find_top_artists(df=playlist_tracks_df):
+    """Find the top artists by playlist occurrence"""
+    top_artists = df['artist_uri'].value_counts().head(20)
+    return top_artists
 
 def plot_artist_occurence_across_playlists():
-    return None
+    """Find the distribution of how many times each artist appears in playlists"""
+    artist_occuerence = playlist_tracks_df['artist_uri'].value_counts()
+    plt.hist(artist_occuerence)
+    plt.xlabel('Frequency in Playlists')
+    plt.title('Distribution of Artist Occurrence Across Playlists')
+    plt.show()
 
-def find_top_albums():
-    return None
+def find_top_albums(playlist_tracks_df, tracks_df):
+    """Find the top albums by playlist occurrence"""
+    # Merge the playlist_tracks_df with tracks_df to get album information
+    merged_df = playlist_tracks_df.merge(tracks_df, on='track_uri', how='left')
+    top_albums = merged_df['album_name'].value_counts().head(20)
+    return top_albums
 
-def plot_album_occurence_across_playlists():
+def plot_album_occurence_across_playlists(playlist_tracks_df, tracks_df):
+    """Plot the distribution of how many times each album appears in playlists"""
+
+    # Merge the playlist_tracks_df with tracks_df to get album information
+    merged_df = playlist_tracks_df.merge(tracks_df, on='track_uri', how='left')
+    top_albums = merged_df['album_name'].value_counts()
+    plt.hist(top_albums)
+    plt.xlabel('Frequency in Playlists')
+    plt.title('Distribution of Album Occurrence Across Playlists')
+    plt.show()
+
+def run_artist_and_album_analysis():
+    print("\nArtist and Album Analysis:")
+    print("Top artists by playlist occurrence:")
+    print(find_top_artists())
+    plot_artist_occurence_across_playlists()
+    print("Top albums by playlist occurrence:")
+    print(find_top_albums(playlist_tracks_df, tracks_df))
+    plot_album_occurence_across_playlists(playlist_tracks_df, tracks_df)
+
+run_artist_and_album_analysis()
     
 

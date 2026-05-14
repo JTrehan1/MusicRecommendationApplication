@@ -67,6 +67,9 @@ def drop_null_rows(df, column_names: list[str]):
     return df
 
 def drop_duplicate_tracks_in_same_playlist(df, max_duplicates=3):
+
+    """Drop duplicate tracks in the same playlist, keeping only a specified number of occurrences."""
+
     before_rows = df.shape[0]
 
     df = df.sort_values(by=['position'])  # Ensure consistent ordering
@@ -81,6 +84,8 @@ def drop_duplicate_tracks_in_same_playlist(df, max_duplicates=3):
     return df
 
 def data_type_summary(df):
+    """Prints the data types of each column in the dataframe."""
+
     print(df.dtypes)
     return df.dtypes
 
@@ -104,15 +109,19 @@ run_data_quality_checks()
 
 # Interaction matrix properties 
 def count_total_unique_playlists(df = playlists_df):
+    """Counts the total number of unique playlists in the playlists dataframe."""
     
     playlists_count = df['playlist_id'].nunique()
     return playlists_count
 
 def count_total_unique_tracks(df = tracks_df):
+    """Counts the total number of unique tracks in the tracks dataframe."""
+
     tracks_count = df['track_uri'].nunique()
     return tracks_count
 
 def total_playlist_interactions(df = playlist_tracks_df):
+    """Counts the total number of interactions in the playlist-tracks dataframe."""
     interactions_count = len(df)
     return interactions_count
 
@@ -155,7 +164,7 @@ def plot_track_frequency_log_log(playlist_tracks_df):
     # Number of tracks with each frequency value
     freq_of_freq = track_frequency.value_counts().sort_index()
 
-    plt.figutwure(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))
     plt.scatter(freq_of_freq.index, freq_of_freq.values, s=3, alpha=0.5)
     plt.title('Distribution of Track Frequency Across Playlists (Log-Log Scale)')
     plt.xlabel('Frequency in Playlists (log)')
@@ -203,6 +212,7 @@ run_interaction_matrix_properties()
 # Playlist level analysis 
 
 def plot_distribution_number_of_tracks_per_playlist(df=playlist_tracks_df):
+    """Plot the distribution of the number of unique tracks per playlist."""
 
     plt.figure(figsize=(10, 6))
     
@@ -215,11 +225,13 @@ def plot_distribution_number_of_tracks_per_playlist(df=playlist_tracks_df):
     plt.show()
 
 def count_playlist_with_max_tracks(df=playlists_df, min_tracks = 10):
-    
+    """Count the number of playlists with fewer than a specified number of tracks."""
+
     count_playlists_with_max_tracks = len(df[df['num_tracks'] < min_tracks])
     return count_playlists_with_max_tracks
 
 def plot_distribution_playlist_duration(df=playlists_df):
+    """Plot the distribution of playlist duration in minutes."""
 
     plt.figure(figsize=(10, 6))
     
@@ -231,6 +243,7 @@ def plot_distribution_playlist_duration(df=playlists_df):
     plt.show()
     
 def plot_distribution_of_edits_per_playlist(df=playlists_df):
+    """Plot the distribution of the number of edits per playlist."""
 
     plt.figure(figsize=(10, 6))
     
@@ -242,6 +255,8 @@ def plot_distribution_of_edits_per_playlist(df=playlists_df):
     plt.show()
 
 def plot_distribution_of_number_of_albums_per_playlist(df=playlists_df):
+    """Plot the distribution of the number of albums per playlist."""
+    
     plt.figure(figsize=(10, 6))
     albums_per_playlist = df['num_albums']
     plt.hist(albums_per_playlist, bins=50)
@@ -263,7 +278,8 @@ run_playlist_level_analysis()
 
 # Track level analysis
 def find_top_20_tracks_by_playlist_occurrence(df=playlist_tracks_df):
-    """Determine how many times each track appears in a playlist"""
+    """Determine the top 20 tracks by playlist occurrence"""
+
     return df['track_uri'].value_counts().head(20)
 
 def plot_distribution_of_track_duration(df = tracks_df):
@@ -289,6 +305,7 @@ run_track_level_analysis()
 
 def find_top_artists(df=playlist_tracks_df):
     """Find the top artists by playlist occurrence"""
+    
     top_artists = df['artist_uri'].value_counts().head(20)
     return top_artists
 

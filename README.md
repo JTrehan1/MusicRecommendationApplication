@@ -1,6 +1,6 @@
 # MusicRecommendationApplication
 
-# Architecture Note — Content-Based Filtering
+# Architecture Note; Content-Based Filtering
 
 The original hybrid architecture planned a CBF layer using Spotify Web API
 data (audio features, track metadata, artist metadata). This was deprecated

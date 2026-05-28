@@ -60,9 +60,9 @@ class DataCleaning:
         """
         before = df.shape[0]
         # Count number of track occurrences across all playlists
-        track_occurences = df['track_uri'].value_counts()
+        track_occurrences = df['track_uri'].value_counts()
         # Filter out track_uris that dont reach the threshold
-        valid_tracks = track_occurences[track_occurences >= self.min_track_occurrences]
+        valid_tracks = track_occurrences[track_occurrences >= self.min_track_occurrences]
         df = df[df['track_uri'].isin(valid_tracks.index)]
         after = df.shape[0]
         print(f"Dropped {before - after} tracks with few occurrences")

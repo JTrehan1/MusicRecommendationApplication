@@ -1,0 +1,5 @@
+# config.yaml
+data:
+  min_playlist_tracks: 10
+  min_track_occurrences: 5
+  max_duplicate_tracks: 3

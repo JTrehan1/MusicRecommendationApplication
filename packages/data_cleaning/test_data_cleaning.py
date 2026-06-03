@@ -78,7 +78,7 @@ def cleaner(config):
 def test_remove_duplicate_tracks_within_playlists(cleaner, input_df, expected_df):
     
     result_df = cleaner._remove_duplicate_tracks_within_playlists(input_df).reset_index(drop=True)
-    pdt.assert_frame_equal(expected_df, result_df)
+    pdt.assert_frame_equal(result_df, expected_df)
 
 @pytest.mark.parametrize(
     "input_df, expected_df",
@@ -123,7 +123,7 @@ def test_remove_duplicate_tracks_within_playlists(cleaner, input_df, expected_df
 def test_remove_playlists_with_few_tracks(cleaner, input_df, expected_df):
     
     result_df = cleaner._remove_playlists_with_few_tracks(input_df).reset_index(drop=True)
-    pdt.assert_frame_equal(expected_df, result_df)
+    pdt.assert_frame_equal(result_df, expected_df)
 
 @pytest.mark.parametrize(
     "input_df, expected_df",
@@ -167,4 +167,42 @@ def test_remove_playlists_with_few_tracks(cleaner, input_df, expected_df):
 def test_remove_tracks_with_few_occurrences(cleaner, input_df, expected_df):
     
     result_df = cleaner._remove_tracks_with_few_occurrences(input_df).reset_index(drop=True)
-    pdt.assert_frame_equal(expected_df, result_df)
+    pdt.assert_frame_equal(result_df, expected_df)
+
+def test_missing_config_raises_value_error():
+    with pytest.raises(ValueError):
+        DataCleaning({"min_playlist_tracks": 10})
+
+
+@pytest.mark.parametrize(
+    "input_df, expected_df, config_override",
+    [
+        pytest.param(
+            pd.DataFrame(
+                {
+                    "playlist_id": [1, 1, 1, 2, 2, 2, 4, 1],
+                    "track_uri": ["track1", "track1", "track2", "track3", "track3", "track4", "track5", "track6"],
+                    "position": [0, 1, 2, 0, 1, 2, 0, 3],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "playlist_id": [1, 1, 2, 2],
+                    "track_uri": ["track1", "track1", "track3", "track3"],
+                    "position": [0, 1, 0, 1],
+                }
+            ),
+            {
+                "min_playlist_tracks": 2,
+                "min_track_occurrences": 2,
+                "max_duplicate_tracks": 2,
+            },
+            id="orchestrator_with_adjusted_duplicate_threshold",
+        ),
+    ],
+)
+
+def test_clean_data(input_df, expected_df, config_override):
+    cleaner = DataCleaning(config_override)
+    result_df = cleaner.clean_data(input_df).reset_index(drop=True)
+    pdt.assert_frame_equal(result_df, expected_df)

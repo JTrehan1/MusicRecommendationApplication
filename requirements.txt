@@ -12,6 +12,7 @@ pyyaml>=6.0                   # Reads config.yaml hyperparameters (DataCleaning 
  
 # ── Progress + logging ─────────────────────────────────────────────────────────
 tqdm>=4.66                    # Progress bars in ingestion stages
+logging (built-in)              # Standard logging for pipeline stages and errors
  
 # ── Data ───────────────────────────────────────────────────────────────────────
 pandas>=2.2                   # DataFrames throughout the pipeline
@@ -20,7 +21,7 @@ scikit-learn>=1.4             # Utilities and baseline models (KNN etc.)
 scipy>=1.13                   # CSR sparse matrix construction (DataIngestion)
  
 # ── Collaborative filtering model ──────────────────────────────────────────────
-implicit>=0.7                 # ALS and BPR model training
+implicit>=0.7                 # ALS and BPR model training, model evaluation metrics
  
 # ── Testing ────────────────────────────────────────────────────────────────────
 pytest>=8.0                   # Unit tests for all pipeline stages

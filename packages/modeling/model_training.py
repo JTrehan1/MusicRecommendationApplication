@@ -21,3 +21,23 @@ class ModelTrainingOutput:
 class ModelTraining:
     """Class for containing the model training of both ALS and BPR models. Run using dedicated orchestration script. 
     """
+    
+    def __init__(self, csr_matrix):
+        """Stores the CSR matrix as an instance variable to be used for model training."""
+        self.csr_matrix = csr_matrix
+        
+    def train(model_type: str):
+        """Trains the model based on the specified model type and returns the trained model along with relevant metadata and evaluation scores. 
+        Args:
+            model_type (str): The type of model to train, either 'ALS' or 'BPR'.
+        Returns:
+            ModelTrainingOutput: A dataclass containing the trained model, model type, track URI mappings, hyperparameters, and evaluation scores."""
+        
+        if model_type == "ALS":
+            # Train ALS model
+            pass 
+        elif model_type == "BPR":
+            # Train BPR model
+            pass 
+        else:
+            raise ValueError(f"Invalid model type specified: {model_type}. Must be either 'ALS' or 'BPR'.")

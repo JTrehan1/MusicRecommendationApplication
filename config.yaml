@@ -4,7 +4,13 @@ data:
   min_track_occurrences: 5
   max_duplicate_tracks: 3
 
-model_training:
+model_training_als:
   factors: 50
-  iterations: 15
+  iterations: 20
   regularization: 0.01
+
+model_training_bpr:
+  factors: 50
+  iterations: 20
+  regularization: 0.01
+

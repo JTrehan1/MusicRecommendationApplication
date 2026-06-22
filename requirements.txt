@@ -12,7 +12,6 @@ pyyaml>=6.0                   # Reads config.yaml hyperparameters (DataCleaning 
  
 # ── Progress + logging ─────────────────────────────────────────────────────────
 tqdm>=4.66                    # Progress bars in ingestion stages
-logging (built-in)              # Standard logging for pipeline stages and errors
  
 # ── Data ───────────────────────────────────────────────────────────────────────
 pandas>=2.2                   # DataFrames throughout the pipeline

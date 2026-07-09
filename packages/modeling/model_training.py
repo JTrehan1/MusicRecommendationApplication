@@ -36,6 +36,8 @@ class ModelTraining:
         Returns:
             ModelTrainingOutput: A dataclass containing the trained model, model type, track URI mappings, hyperparameters, and evaluation scores."""
         
+        logger.info(f"Starting model training for model type: {model_type} with hyperparameters: {hyperparameters}")
+        
         if model_type == "ALS":
             # Train ALS model
             model = AlternatingLeastSquares(**hyperparameters)

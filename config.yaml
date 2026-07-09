@@ -4,6 +4,10 @@ data:
   min_track_occurrences: 5
   max_duplicate_tracks: 3
 
+train_test_split:
+  test_size: 0.2
+  random_state: 42
+
 model_training_als:
   factors: 50
   iterations: 20

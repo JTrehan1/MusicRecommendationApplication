@@ -18,3 +18,15 @@ model_training_bpr:
   iterations: 20
   regularization: 0.01
 
+evaluation:
+  k: 10
+  target_metric: "ranking_metrics_at_k" # calculates the ranking metrics precision, MAP, NDCG, and AUC in a single pass
+
+optuna:
+  n_trials: 50
+  study_name: "playlist_recommendation_optimization"
+
+mlflow:
+  experiment_name: "playlist_recommendation"
+  tracking_uri: "http://localhost:5000"
+

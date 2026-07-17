@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 from implicit.als import AlternatingLeastSquares
 from implicit.bpr import BayesianPersonalizedRanking
-from implicit.evaluation import precision_at_k, mean_average_precision_at_k 
 from typing import Any
 
 logger = logging.getLogger(__name__)

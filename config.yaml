@@ -18,3 +18,17 @@ model_training_bpr:
   iterations: 20
   regularization: 0.01
 
+evaluation:
+  k: 10
+  target_metric: "ndcg" # calculates the ranking metrics precision, MAP, NDCG, or AUC optuna should optimise
+
+optuna:
+  n_trials: 50
+  direction: "maximize" # direction of optimization, can be either "minimize" or "maximize"
+  seed: 42
+  study_name: "playlist_recommendation_optimization"
+
+mlflow:
+  experiment_name: "playlist_recommendation"
+  tracking_uri: "http://localhost:5000"
+

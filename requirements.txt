@@ -21,6 +21,7 @@ scipy>=1.13                   # CSR sparse matrix construction (DataIngestion)
  
 # ── Collaborative filtering model ──────────────────────────────────────────────
 implicit>=0.7                 # ALS and BPR model training, model evaluation metrics
+optuna>=4.0                   # Hyperparameter tuning (HyperparameterTuning)
  
 # ── Testing ────────────────────────────────────────────────────────────────────
 pytest>=8.0                   # Unit tests for all pipeline stages

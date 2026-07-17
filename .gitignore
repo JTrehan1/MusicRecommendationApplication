@@ -135,6 +135,9 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# Model training artifacts (packages/modeling/orchestration.py output)
+artifacts/
+
 # Environments
 .env
 .envrc

@@ -8,27 +8,79 @@ train_test_split:
   test_size: 0.2
   random_state: 42
 
+# Default hyperparameters used to train a model directly (orchestration.run_tuning: false)
+# and as the fixed base config (random_state) held constant across hyperparameter tuning trials.
 model_training_als:
   factors: 50
   iterations: 20
   regularization: 0.01
+  random_state: 42
 
 model_training_bpr:
   factors: 50
   iterations: 20
   regularization: 0.01
+  learning_rate: 0.01
+  random_state: 42
 
-evaluation:
+# Ranking metrics ModelEvaluation computes against the held-out test split.
+# Supported metrics: precision_at_k, map_at_k, ndcg_at_k, auc_at_k
+model_evaluation:
   k: 10
-  target_metric: "ndcg" # calculates the ranking metrics precision, MAP, NDCG, or AUC optuna should optimise
+  metrics:
+    - precision_at_k
+    - map_at_k
+    - ndcg_at_k
+    - auc_at_k
 
-optuna:
-  n_trials: 50
-  direction: "maximize" # direction of optimization, can be either "minimize" or "maximize"
-  seed: 42
-  study_name: "playlist_recommendation_optimization"
+# Optuna search run by HyperparameterTuning over the search_space below, when
+# orchestration.run_tuning is true. primary_metric is the score each trial is optimized on and
+# must be one of model_evaluation.metrics.
+hyperparameter_tuning:
+  n_trials: 20
+  direction: maximize
+  primary_metric: map_at_k
+  random_state: 42
+  search_space:
+    als:
+      factors:
+        type: int
+        low: 20
+        high: 200
+      regularization:
+        type: float
+        low: 0.001
+        high: 0.5
+        log: true
+      iterations:
+        type: int
+        low: 10
+        high: 50
+    bpr:
+      factors:
+        type: int
+        low: 20
+        high: 200
+      regularization:
+        type: float
+        low: 0.001
+        high: 0.5
+        log: true
+      learning_rate:
+        type: float
+        low: 0.0001
+        high: 0.1
+        log: true
+      iterations:
+        type: int
+        low: 10
+        high: 50
 
-mlflow:
-  experiment_name: "playlist_recommendation"
-  tracking_uri: "http://localhost:5000"
+# Controls which model orchestration.py trains end-to-end and whether it tunes hyperparameters first.
+orchestration:
+  model_type: ALS
+  run_tuning: true
 
+# Where orchestration.py persists trained model artifacts (model, mappings, hyperparameters, evaluation scores).
+artifacts:
+  output_dir: artifacts

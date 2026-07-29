@@ -68,7 +68,12 @@ class PopularityBaseline(RecommenderBase):
                     keep_mask = ~np.isin(candidate_items, liked_items)
                     candidate_items = candidate_items[keep_mask]
                     candidate_scores = candidate_scores[keep_mask]
-
+            if candidate_items.size < N:
+                raise ValueError(
+                    f"Not enough items to recommend for user {userid[row]} after filtering. "
+                    f"Found {candidate_items.size} items, but N={N}. "
+                    "Either reduce N or disable filter_already_liked_items."
+                )
             ids[row] = candidate_items[:N]
             scores[row] = candidate_scores[:N]
 

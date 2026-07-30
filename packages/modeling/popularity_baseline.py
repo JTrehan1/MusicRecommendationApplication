@@ -20,7 +20,11 @@ class PopularityBaseline(RecommenderBase):
             show_progress (bool): Unused, present to match the RecommenderBase signature.
             callback: Unused, present to match the RecommenderBase signature."""
         item_scores = np.asarray(user_items.sum(axis=0)).ravel()
-        order = np.argsort(-item_scores)
+        # np.argsort returns intp (int64 on 64-bit platforms), but implicit.evaluation's
+        # ranking_metrics_at_k expects int32 item-id buffers from recommend() and raises a
+        # "Buffer dtype mismatch, expected 'int' but got 'long'" otherwise. ALS/BPR return int32
+        # natively, so cast here to keep the baseline drop-in compatible with the same metrics.
+        order = np.argsort(-item_scores).astype(np.int32)
 
         self.popular_items = order
         self.popular_scores = item_scores[order]
